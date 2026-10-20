@@ -27,6 +27,11 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Install SVG Converter Tool
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y librsvg2-bin
+
       - name: Prepare Web App & Inject Version
         run: |
           mkdir -p www
@@ -61,15 +66,19 @@ jobs:
           </svg>
           EOF
 
-          # Создаем иконки всех размеров напрямую для Android
           RES_DIR="android/app/src/main/res"
-          convert -background none -resize 48x48 icon.svg $RES_DIR/mipmap-mdpi/ic_launcher.png
-          convert -background none -resize 72x72 icon.svg $RES_DIR/mipmap-hdpi/ic_launcher.png
-          convert -background none -resize 96x96 icon.svg $RES_DIR/mipmap-xhdpi/ic_launcher.png
-          convert -background none -resize 144x144 icon.svg $RES_DIR/mipmap-xxhdpi/ic_launcher.png
-          convert -background none -resize 192x192 icon.svg $RES_DIR/mipmap-xxxhdpi/ic_launcher.png
-          
-          # Круглые иконки
+
+          # Удаляем стандартную векторную заглушку Capacitor
+          rm -rf $RES_DIR/mipmap-anydpi-v26
+
+          # Нарезаем иконку slu1pik во все разрешения Android
+          rsvg-convert -w 48 -h 48 icon.svg -o $RES_DIR/mipmap-mdpi/ic_launcher.png
+          rsvg-convert -w 72 -h 72 icon.svg -o $RES_DIR/mipmap-hdpi/ic_launcher.png
+          rsvg-convert -w 96 -h 96 icon.svg -o $RES_DIR/mipmap-xhdpi/ic_launcher.png
+          rsvg-convert -w 144 -h 144 icon.svg -o $RES_DIR/mipmap-xxhdpi/ic_launcher.png
+          rsvg-convert -w 192 -h 192 icon.svg -o $RES_DIR/mipmap-xxxhdpi/ic_launcher.png
+
+          # Дублируем для круглых иконок
           cp $RES_DIR/mipmap-mdpi/ic_launcher.png $RES_DIR/mipmap-mdpi/ic_launcher_round.png
           cp $RES_DIR/mipmap-hdpi/ic_launcher.png $RES_DIR/mipmap-hdpi/ic_launcher_round.png
           cp $RES_DIR/mipmap-xhdpi/ic_launcher.png $RES_DIR/mipmap-xhdpi/ic_launcher_round.png
@@ -95,5 +104,5 @@ jobs:
         with:
           tag_name: v1.${{ github.run_number }}
           name: "slu1pik Calendar v1.${{ github.run_number }}"
-          body: "Релиз приложения Liquid Glass Calendar от slu1pik с иконкой и автообновлением."
+          body: "Релиз Liquid Glass Calendar от slu1pik."
           files: slu1pik-calendar.apk
