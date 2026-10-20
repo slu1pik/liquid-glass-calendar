@@ -3,23 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>Liquid Glass Calendar</title>
+  <title>slu1pik Calendar</title>
   <style>
     :root {
-      --bg-base: #07070c;
-      --blob-1: #7b2cbf;
-      --blob-2: #00b4d8;
-      --blob-3: #ff007f;
-      --accent: #a855f7;
-      --glass-alpha: 0.14;
-      --glass-blur: 24px;
+      --bg-base: #060608;
+      --wave-1: #ffffff;
+      --wave-2: #8a8a98;
+      --wave-3: #2d2d35;
+      --accent: #e2e8f0;
+      --accent-glow: rgba(255, 255, 255, 0.35);
+      --glass-alpha: 0.12;
+      --glass-blur: 22px;
       --border-alpha: 0.28;
-      --anim-speed: 14s;
+      --wave-speed: 1;
       --text-main: #ffffff;
-      --text-muted: rgba(255, 255, 255, 0.62);
-      --radius-xl: 28px;
-      --radius-lg: 20px;
-      --radius-md: 14px;
+      --text-muted: rgba(255, 255, 255, 0.58);
+      --radius-xl: 26px;
+      --radius-lg: 18px;
+      --radius-md: 12px;
     }
 
     * {
@@ -29,7 +30,7 @@
       user-select: none;
       -webkit-user-select: none;
       -webkit-tap-highlight-color: transparent;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
     }
 
     body {
@@ -37,95 +38,160 @@
       color: var(--text-main);
       min-height: 100vh;
       overflow-x: hidden;
-      position: relative;
-      padding-top: max(16px, env(safe-area-inset-top));
-      padding-bottom: 110px;
+      padding-top: max(14px, env(safe-area-inset-top));
+      padding-bottom: 115px;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* ЖИДКИЙ АНИМИРОВАННЫЙ ФОН (LIQUID MESH) */
-    .liquid-bg {
+    /* ПЛАВНЫЙ ЭКРАН ЗАГРУЗКИ (SPLASH SCREEN) */
+    #splash-screen {
       position: fixed;
       inset: 0;
+      z-index: 9999;
+      background: #050507;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.55s;
+    }
+
+    #splash-screen.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .splash-logo {
+      width: 84px;
+      height: 84px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.22), rgba(255,255,255,0.04));
+      border: 1px solid rgba(255,255,255,0.38);
+      box-shadow: 0 20px 50px rgba(255,255,255,0.12), inset 0 1px 2px rgba(255,255,255,0.6);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      animation: pulseLogo 1.8s infinite alternate ease-in-out;
+    }
+
+    @keyframes pulseLogo {
+      from { transform: scale(0.96); box-shadow: 0 10px 30px rgba(255,255,255,0.08); }
+      to { transform: scale(1.04); box-shadow: 0 20px 50px rgba(255,255,255,0.25); }
+    }
+
+    /* АППАРАТНЫЙ ФОН С ЖИДКИМИ ВОЛНАМИ (CANVAS 120FPS) */
+    #wave-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
       z-index: -2;
-      overflow: hidden;
-      background: radial-gradient(circle at 50% 20%, rgba(25, 20, 45, 0.8), var(--bg-base));
-    }
-
-    .blob {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(65px);
-      opacity: 0.75;
-      animation: floatBlob var(--anim-speed) infinite alternate ease-in-out;
-      will-change: transform;
-    }
-
-    .blob-1 {
-      width: 320px;
-      height: 320px;
-      background: var(--blob-1);
-      top: -60px;
-      left: -60px;
-    }
-
-    .blob-2 {
-      width: 360px;
-      height: 360px;
-      background: var(--blob-2);
-      bottom: 8%;
-      right: -80px;
-      animation-delay: -5s;
-    }
-
-    .blob-3 {
-      width: 260px;
-      height: 260px;
-      background: var(--blob-3);
-      top: 42%;
-      left: 20%;
-      animation-delay: -9s;
-    }
-
-    @keyframes floatBlob {
-      0% { transform: translate(0, 0) scale(1) rotate(0deg); }
-      50% { transform: translate(45px, -35px) scale(1.15) rotate(15deg); }
-      100% { transform: translate(-30px, 45px) scale(0.92) rotate(-15deg); }
+      pointer-events: none;
+      transform: translate3d(0, 0, 0);
     }
 
     /* ЭФФЕКТ LIQUID GLASS */
     .glass {
       background: linear-gradient(
-        135deg,
-        rgba(255, 255, 255, calc(var(--glass-alpha) + 0.08)) 0%,
-        rgba(255, 255, 255, var(--glass-alpha)) 100%
+        145deg,
+        rgba(255, 255, 255, calc(var(--glass-alpha) + 0.07)) 0%,
+        rgba(255, 255, 255, calc(var(--glass-alpha) * 0.65)) 100%
       );
-      backdrop-filter: blur(var(--glass-blur)) saturate(190%);
-      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(190%);
+      backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
       border: 1px solid rgba(255, 255, 255, var(--border-alpha));
       box-shadow:
-        0 18px 40px rgba(0, 0, 0, 0.38),
-        inset 0 1px 1px rgba(255, 255, 255, calc(var(--border-alpha) + 0.15)),
-        inset 0 -1px 1px rgba(255, 255, 255, 0.05);
+        0 14px 34px rgba(0, 0, 0, 0.45),
+        inset 0 1px 1px rgba(255, 255, 255, calc(var(--border-alpha) + 0.18));
       border-radius: var(--radius-xl);
       position: relative;
       overflow: hidden;
+      transform: translate3d(0, 0, 0);
     }
 
     .glass::before {
       content: "";
       position: absolute;
       top: 0;
-      left: -50%;
-      width: 200%;
+      left: -30%;
+      width: 160%;
       height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.65), transparent);
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
       pointer-events: none;
     }
 
     .app-container {
-      max-width: 480px;
+      max-width: 460px;
       margin: 0 auto;
-      padding: 0 16px;
+      padding: 0 14px;
+    }
+
+    /* НЕСМЫВАЕМАЯ ПЛАШКА ОБНОВЛЕНИЯ (STICKY UPDATE BANNER) */
+    #update-banner {
+      display: none;
+      position: sticky;
+      top: 10px;
+      z-index: 500;
+      margin-bottom: 14px;
+      padding: 13px 16px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.24), rgba(255,255,255,0.08));
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border: 1.5px solid rgba(255, 255, 255, 0.65);
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.65), 0 0 25px var(--accent-glow);
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      animation: bannerPulse 2.2s infinite alternate ease-in-out;
+    }
+
+    #update-banner.visible {
+      display: flex;
+    }
+
+    @keyframes bannerPulse {
+      0% { transform: translateY(0) scale(1); }
+      100% { transform: translateY(-2px) scale(1.01); }
+    }
+
+    .upd-info {
+      flex: 1;
+    }
+
+    .upd-title {
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .upd-sub {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.78);
+      margin-top: 2px;
+    }
+
+    .upd-btn {
+      padding: 9px 15px;
+      border-radius: 14px;
+      background: #ffffff;
+      color: #000000;
+      font-weight: 800;
+      font-size: 12px;
+      text-decoration: none;
+      white-space: nowrap;
+      box-shadow: 0 4px 15px rgba(255,255,255,0.4);
+      transition: transform 0.15s;
+    }
+
+    .upd-btn:active {
+      transform: scale(0.93);
     }
 
     /* ШАПКА */
@@ -133,143 +199,167 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
-      padding: 14px 20px;
+      margin-bottom: 12px;
+      padding: 13px 18px;
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+
+    .mini-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 11px;
+      background: rgba(255,255,255,0.14);
+      border: 1px solid rgba(255,255,255,0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 13px;
     }
 
     .brand-title {
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 800;
-      letter-spacing: -0.5px;
-      background: linear-gradient(90deg, #fff, rgba(255,255,255,0.7));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.4px;
     }
 
     .brand-sub {
-      font-size: 11px;
+      font-size: 10px;
       color: var(--text-muted);
       text-transform: uppercase;
-      letter-spacing: 1.2px;
-      margin-top: 2px;
+      letter-spacing: 1px;
     }
 
-    .today-pill {
-      padding: 7px 14px;
+    .pill-btn {
+      padding: 7px 13px;
       border-radius: 99px;
       background: rgba(255, 255, 255, 0.12);
-      border: 1px solid rgba(255, 255, 255, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      color: #fff;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
-      transition: transform 0.2s, background 0.2s;
+      transition: transform 0.18s, background 0.18s;
     }
 
-    .today-pill:active {
-      transform: scale(0.93);
-      background: var(--accent);
+    .pill-btn:active {
+      transform: scale(0.92);
+      background: rgba(255, 255, 255, 0.28);
     }
 
-    /* ВКЛАДКИ (PAGES) */
+    /* СТРАНИЦЫ */
     .page {
       display: none;
-      animation: pageFade 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: transform, opacity;
+      animation: smoothSlide 0.28s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     .page.active {
       display: block;
     }
 
-    @keyframes pageFade {
-      from { opacity: 0; transform: translateY(12px) scale(0.98); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
+    @keyframes smoothSlide {
+      from { opacity: 0; transform: translate3d(0, 10px, 0); }
+      to { opacity: 1; transform: translate3d(0, 0, 0); }
     }
 
-    /* МИНИ-СТАТИСТИКА СВЕРХУ */
-    .stats-row {
+    /* БЛОК БЛИЖАЙШЕГО СОБЫТИЯ И СТАТИСТИКИ */
+    .top-dashboard {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: 1.5fr 1fr;
       gap: 10px;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
     }
 
-    .stat-card {
-      padding: 12px;
-      text-align: center;
+    .dash-card {
+      padding: 13px 15px;
       border-radius: var(--radius-lg);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
 
-    .stat-val {
-      font-size: 22px;
+    .dash-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .dash-main {
+      font-size: 14px;
       font-weight: 800;
-      color: #fff;
-      text-shadow: 0 0 18px var(--accent);
+      line-height: 1.25;
     }
 
-    .stat-lbl {
+    .dash-sub {
       font-size: 11px;
       color: var(--text-muted);
-      margin-top: 2px;
+      margin-top: 4px;
     }
 
     /* КАЛЕНДАРЬ */
     .calendar-card {
-      padding: 18px;
-      margin-bottom: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
     }
 
     .cal-nav {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
 
     .month-label {
-      font-size: 18px;
-      font-weight: 700;
-      text-transform: capitalize;
+      font-size: 17px;
+      font-weight: 800;
     }
 
     .nav-btn {
-      width: 36px;
-      height: 36px;
+      width: 34px;
+      height: 34px;
       border-radius: 50%;
-      border: 1px solid rgba(255, 255, 255, 0.22);
+      border: 1px solid rgba(255, 255, 255, 0.24);
       background: rgba(255, 255, 255, 0.08);
       color: #fff;
-      font-size: 16px;
+      font-size: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: transform 0.15s;
     }
 
     .nav-btn:active {
-      transform: scale(0.88);
-      background: var(--accent);
+      transform: scale(0.86);
     }
 
     .weekdays {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
       text-align: center;
-      font-size: 12px;
-      font-weight: 600;
+      font-size: 11px;
+      font-weight: 700;
       color: var(--text-muted);
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .days-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 6px;
+      gap: 5px;
     }
 
     .day-cell {
       aspect-ratio: 1;
-      border-radius: 14px;
+      border-radius: 13px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -278,120 +368,143 @@
       font-weight: 600;
       cursor: pointer;
       position: relative;
-      transition: all 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+      transition: transform 0.16s, background 0.16s;
       border: 1px solid transparent;
     }
 
-    .day-cell:hover {
-      background: rgba(255, 255, 255, 0.1);
+    .day-cell:active {
+      transform: scale(0.9);
     }
 
     .day-cell.other-month {
-      opacity: 0.25;
+      opacity: 0.2;
       pointer-events: none;
     }
 
     .day-cell.today {
-      border-color: rgba(255, 255, 255, 0.55);
-      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.6);
+      background: rgba(255, 255, 255, 0.11);
     }
 
     .day-cell.selected {
-      background: linear-gradient(135deg, var(--accent), rgba(255, 255, 255, 0.25));
-      box-shadow: 0 6px 20px var(--accent);
-      border-color: #fff;
-      transform: scale(1.06);
+      background: rgba(255, 255, 255, 0.92);
+      color: #000000;
+      font-weight: 800;
+      box-shadow: 0 5px 18px var(--accent-glow);
+      transform: scale(1.05);
     }
 
     .dots-wrap {
       display: flex;
       gap: 3px;
-      margin-top: 3px;
-      height: 5px;
+      margin-top: 2px;
+      height: 4px;
     }
 
     .dot {
-      width: 5px;
-      height: 5px;
+      width: 4px;
+      height: 4px;
       border-radius: 50%;
     }
 
-    /* ЗАМЕТКИ ВЫБРАННОГО ДНЯ */
+    /* СЕКЦИЯ ЗАМЕТОК (ИНТУИТИВНАЯ) */
     .notes-section {
-      padding: 18px;
-      margin-bottom: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
     }
 
     .notes-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     .selected-date-title {
-      font-size: 16px;
-      font-weight: 700;
+      font-size: 15px;
+      font-weight: 800;
     }
 
-    .add-note-btn {
+    .primary-btn {
       padding: 8px 14px;
       border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.35);
-      background: linear-gradient(135deg, var(--accent), rgba(255,255,255,0.18));
-      color: #fff;
-      font-weight: 700;
-      font-size: 13px;
+      border: 1px solid rgba(255,255,255,0.4);
+      background: rgba(255, 255, 255, 0.92);
+      color: #000;
+      font-weight: 800;
+      font-size: 12px;
       cursor: pointer;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.25);
-      transition: transform 0.2s;
+      transition: transform 0.15s;
     }
 
-    .add-note-btn:active {
+    .primary-btn:active {
       transform: scale(0.94);
+    }
+
+    .filter-bar {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .filter-chip {
+      padding: 5px 11px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 700;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.16);
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .filter-chip.active {
+      background: rgba(255,255,255,0.22);
+      color: #fff;
+      border-color: rgba(255,255,255,0.5);
     }
 
     .search-box {
       width: 100%;
-      padding: 11px 14px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,0.2);
-      background: rgba(0, 0, 0, 0.22);
+      padding: 10px 13px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(0, 0, 0, 0.25);
       color: #fff;
       font-size: 13px;
       outline: none;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
+      user-select: text;
+      -webkit-user-select: text;
     }
 
-    .search-box::placeholder {
-      color: rgba(255,255,255,0.45);
-    }
-
-    /* ФОРМА ДОБАВЛЕНИЯ ЗАМЕТКИ */
     .note-form {
       display: none;
-      background: rgba(0, 0, 0, 0.28);
-      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(0, 0, 0, 0.32);
+      border: 1px solid rgba(255,255,255,0.22);
       border-radius: var(--radius-lg);
-      padding: 14px;
-      margin-bottom: 14px;
+      padding: 13px;
+      margin-bottom: 12px;
     }
 
     .note-form.open {
       display: block;
-      animation: pageFade 0.25s ease;
+      animation: smoothSlide 0.2s ease;
     }
 
     .input-field {
       width: 100%;
-      padding: 10px 12px;
-      border-radius: 12px;
+      padding: 9px 12px;
+      border-radius: 11px;
       border: 1px solid rgba(255,255,255,0.2);
       background: rgba(255,255,255,0.08);
       color: #fff;
-      font-size: 14px;
+      font-size: 13px;
       outline: none;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       user-select: text;
       -webkit-user-select: text;
     }
@@ -399,53 +512,50 @@
     .form-row {
       display: flex;
       gap: 8px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .tag-selector {
       display: flex;
       gap: 6px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       flex-wrap: wrap;
     }
 
     .tag-chip {
-      padding: 6px 11px;
+      padding: 5px 10px;
       border-radius: 99px;
-      font-size: 12px;
-      font-weight: 600;
+      font-size: 11px;
+      font-weight: 700;
       cursor: pointer;
       border: 1px solid rgba(255,255,255,0.2);
       background: rgba(255,255,255,0.06);
-      transition: all 0.2s;
     }
 
     .tag-chip.active {
+      background: rgba(255,255,255,0.24);
       border-color: #fff;
-      transform: scale(1.05);
-      box-shadow: 0 0 12px rgba(255,255,255,0.3);
     }
 
     .note-list {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
     }
 
     .note-item {
-      padding: 13px 14px;
-      border-radius: 16px;
+      padding: 12px 13px;
+      border-radius: 15px;
       background: rgba(255, 255, 255, 0.07);
-      border: 1px solid rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.15);
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: space-between;
       gap: 10px;
-      transition: all 0.2s;
     }
 
     .note-item.done {
-      opacity: 0.52;
+      opacity: 0.48;
     }
 
     .note-item.done .note-title {
@@ -454,7 +564,7 @@
 
     .note-left {
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       gap: 10px;
       flex: 1;
     }
@@ -463,78 +573,87 @@
       width: 22px;
       height: 22px;
       border-radius: 50%;
-      border: 2px solid var(--accent);
+      border: 2px solid rgba(255,255,255,0.7);
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       flex-shrink: 0;
-      margin-top: 2px;
       font-size: 12px;
+      font-weight: 900;
     }
 
     .note-item.done .check-circle {
-      background: var(--accent);
+      background: #fff;
+      color: #000;
     }
 
     .note-title {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 700;
-      margin-bottom: 3px;
     }
 
     .note-desc {
       font-size: 12px;
       color: var(--text-muted);
-      line-height: 1.4;
+      margin-top: 2px;
     }
 
     .note-meta {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       align-items: center;
-      margin-top: 6px;
-      font-size: 11px;
+      margin-top: 4px;
+      font-size: 10px;
+      color: var(--text-muted);
     }
 
     .badge {
-      padding: 2px 8px;
+      padding: 2px 7px;
       border-radius: 99px;
-      font-weight: 600;
+      font-weight: 700;
       font-size: 10px;
     }
 
     .del-btn {
-      background: rgba(255, 60, 90, 0.2);
-      border: 1px solid rgba(255, 60, 90, 0.4);
-      color: #ff8fa3;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
       width: 28px;
       height: 28px;
-      border-radius: 10px;
+      border-radius: 9px;
       cursor: pointer;
-      font-size: 14px;
-      flex-shrink: 0;
+      font-size: 12px;
     }
 
     .empty-state {
       text-align: center;
-      padding: 24px 10px;
+      padding: 20px 10px;
       color: var(--text-muted);
-      font-size: 13px;
+      font-size: 12px;
+      line-height: 1.5;
     }
 
-    /* ВКЛАДКА 2: ФОКУС И АНАЛИТИКА */
-    .timer-card {
-      padding: 24px 18px;
-      text-align: center;
-      margin-bottom: 16px;
+    /* ВКЛАДКА 2: ФОКУС И ТРЕКЕР ПРИВЫЧЕК */
+    .card-block {
+      padding: 18px;
+      margin-bottom: 12px;
+    }
+
+    .sec-title {
+      font-size: 15px;
+      font-weight: 800;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
 
     .timer-ring-wrap {
       position: relative;
-      width: 200px;
-      height: 200px;
-      margin: 14px auto;
+      width: 180px;
+      height: 180px;
+      margin: 10px auto;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -547,165 +666,175 @@
     }
 
     .timer-display {
-      font-size: 40px;
+      font-size: 36px;
       font-weight: 800;
       letter-spacing: 1px;
-      text-shadow: 0 0 24px var(--accent);
     }
 
-    .timer-controls {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      margin-top: 14px;
-    }
-
-    /* ВКЛАДКА 3: НАСТРОЙКИ КАСТОМИЗАЦИИ */
-    .settings-card {
-      padding: 18px;
-      margin-bottom: 16px;
-    }
-
-    .sec-title {
-      font-size: 16px;
-      font-weight: 800;
-      margin-bottom: 14px;
+    .habit-row {
       display: flex;
       align-items: center;
-      gap: 8px;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.14);
+      margin-bottom: 8px;
     }
 
+    .habit-name {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .habit-days {
+      display: flex;
+      gap: 4px;
+    }
+
+    .h-dot {
+      width: 22px;
+      height: 22px;
+      border-radius: 7px;
+      border: 1px solid rgba(255,255,255,0.25);
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .h-dot.active {
+      background: #ffffff;
+      color: #000000;
+      border-color: #ffffff;
+      box-shadow: 0 0 10px rgba(255,255,255,0.4);
+    }
+
+    /* ВКЛАДКА 3: НАСТРОЙКИ И ТЕМЫ */
     .presets-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-      margin-bottom: 18px;
+      gap: 8px;
+      margin-bottom: 14px;
     }
 
     .preset-btn {
-      padding: 12px;
-      border-radius: 16px;
+      padding: 11px;
+      border-radius: 14px;
       border: 1px solid rgba(255,255,255,0.22);
-      background: rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.07);
       color: #fff;
       font-weight: 700;
-      font-size: 13px;
+      font-size: 12px;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 8px;
-      transition: transform 0.2s;
-    }
-
-    .preset-btn:active {
-      transform: scale(0.95);
+      text-align: left;
     }
 
     .preset-dot {
       width: 18px;
       height: 18px;
       border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.5);
       flex-shrink: 0;
     }
 
-    .ctrl-group {
-      margin-bottom: 16px;
-    }
-
-    .ctrl-label {
+    .saved-themes-list {
       display: flex;
-      justify-content: space-between;
-      font-size: 13px;
-      font-weight: 600;
-      margin-bottom: 7px;
-      color: rgba(255,255,255,0.88);
-    }
-
-    input[type="range"] {
-      width: 100%;
-      accent-color: var(--accent);
-      height: 6px;
-      border-radius: 99px;
-      cursor: pointer;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
     }
 
     .color-pickers {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      margin-bottom: 16px;
+      gap: 8px;
+      margin-bottom: 14px;
     }
 
     .color-item {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 6px;
-      font-size: 11px;
+      gap: 5px;
+      font-size: 10px;
       color: var(--text-muted);
     }
 
     input[type="color"] {
-      width: 48px;
-      height: 48px;
-      border: 2px solid rgba(255,255,255,0.4);
-      border-radius: 14px;
+      width: 44px;
+      height: 44px;
+      border: 1.5px solid rgba(255,255,255,0.45);
+      border-radius: 12px;
       background: transparent;
       cursor: pointer;
-      padding: 0;
     }
 
-    /* КАРТОЧКА АВТОРА */
+    .ctrl-group {
+      margin-bottom: 13px;
+    }
+
+    .ctrl-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: #ffffff;
+      height: 5px;
+      border-radius: 99px;
+      cursor: pointer;
+    }
+
     .author-card {
-      padding: 20px;
+      padding: 18px;
       text-align: center;
-      border: 1px solid rgba(255,255,255,0.35);
-      background: linear-gradient(135deg, rgba(168, 85, 247, 0.22), rgba(0, 180, 216, 0.18));
-    }
-
-    .author-name {
-      font-size: 18px;
-      font-weight: 800;
-      margin-bottom: 6px;
-      letter-spacing: 0.4px;
+      border: 1px solid rgba(255,255,255,0.38);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04));
     }
 
     .tg-link {
       display: inline-block;
       margin-top: 10px;
-      padding: 11px 22px;
+      padding: 10px 20px;
       border-radius: 99px;
-      background: linear-gradient(90deg, var(--accent), #00b4d8);
-      color: #fff;
+      background: #ffffff;
+      color: #000000;
       text-decoration: none;
       font-weight: 800;
-      font-size: 14px;
-      box-shadow: 0 8px 25px rgba(168, 85, 247, 0.45);
-      transition: transform 0.2s;
+      font-size: 13px;
+      box-shadow: 0 6px 20px rgba(255, 255, 255, 0.3);
     }
 
-    .tg-link:active {
-      transform: scale(0.94);
-    }
-
-    /* НИЖНИЙ ПЛАВАЮЩИЙ ДОК (LIQUID DOCK) */
+    /* НИЖНИЙ ДОК */
     .bottom-dock {
       position: fixed;
-      bottom: max(16px, env(safe-area-inset-bottom));
+      bottom: max(14px, env(safe-area-inset-bottom));
       left: 50%;
       transform: translateX(-50%);
-      width: calc(100% - 32px);
-      max-width: 420px;
-      padding: 8px;
+      width: calc(100% - 28px);
+      max-width: 410px;
+      padding: 6px;
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
-      z-index: 100;
+      gap: 5px;
+      z-index: 200;
       border-radius: 99px;
     }
 
     .dock-btn {
-      padding: 11px 8px;
+      padding: 10px 6px;
       border-radius: 99px;
       border: none;
       background: transparent;
@@ -715,51 +844,67 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 5px;
       cursor: pointer;
-      transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+      transition: all 0.2s ease;
     }
 
     .dock-btn.active {
-      background: rgba(255, 255, 255, 0.18);
-      color: #fff;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+      background: rgba(255, 255, 255, 0.92);
+      color: #000000;
+      box-shadow: 0 4px 14px rgba(255, 255, 255, 0.25);
     }
   </style>
 </head>
 <body>
 
-  <!-- Жидкий переливающийся фон -->
-  <div class="liquid-bg">
-    <div class="blob blob-1"></div>
-    <div class="blob blob-2"></div>
-    <div class="blob blob-3"></div>
+  <!-- ПЛАВНЫЙ SPLASH ЭКРАН ПРИ ЗАПУСКЕ -->
+  <div id="splash-screen">
+    <div class="splash-logo">
+      <span style="font-size:11px; letter-spacing:1.5px; opacity:0.7;">CALENDAR</span>
+      <span style="font-size:18px; font-weight:900; margin-top:2px;">slu1pik</span>
+    </div>
+    <div style="font-size:12px; color:rgba(255,255,255,0.55); letter-spacing:1px;">LIQUID GLASS OS</div>
   </div>
 
+  <!-- АППАРАТНЫЙ ШЕЙДЕР ПЕРЕЛИВАЮЩИХСЯ ВОЛН -->
+  <canvas id="wave-canvas"></canvas>
+
   <div class="app-container">
-    <!-- Верхняя панель -->
-    <header class="glass header">
-      <div>
-        <div class="brand-title">LIQUID GLASS</div>
-        <div class="brand-sub">Smart Calendar OS</div>
+
+    <!-- НЕСМЫВАЕМАЯ ПЛАШКА ОБНОВЛЕНИЯ С GITHUB -->
+    <div id="update-banner">
+      <div class="upd-info">
+        <div class="upd-title">⚡ Доступно обновление <span id="upd-ver-tag">v2.0</span></div>
+        <div class="upd-sub">Новая сборка в репозитории GitHub готова к установке</div>
       </div>
-      <div class="today-pill" onclick="jumpToToday()">Сегодня</div>
+      <a id="upd-download-link" class="upd-btn" href="#" target="_blank">Скачать APK</a>
+    </div>
+
+    <!-- ШАПКА -->
+    <header class="glass header">
+      <div class="brand-wrap">
+        <div class="mini-icon">S1</div>
+        <div>
+          <div class="brand-title">slu1pik</div>
+          <div class="brand-sub">Liquid Calendar • <span id="ver-display">v1.0</span></div>
+        </div>
+      </div>
+      <button class="pill-btn" onclick="jumpToToday()">Сегодня</button>
     </header>
 
-    <!-- СТРАНИЦА 1: КАЛЕНДАРЬ И ЗАМЕТКИ -->
+    <!-- ВКЛАДКА 1: КАЛЕНДАРЬ И ЗАМЕТКИ -->
     <main id="page-calendar" class="page active">
-      <div class="stats-row">
-        <div class="glass stat-card">
-          <div class="stat-val" id="stat-total">0</div>
-          <div class="stat-lbl">Всего заметок</div>
+      <div class="top-dashboard">
+        <div class="glass dash-card">
+          <div class="dash-label">⏳ Ближайший фокус</div>
+          <div class="dash-main" id="next-event-title">Нет активных задач</div>
+          <div class="dash-sub" id="next-event-time">Выбери день и нажми «+ Заметка»</div>
         </div>
-        <div class="glass stat-card">
-          <div class="stat-val" id="stat-day">0</div>
-          <div class="stat-lbl">На этот день</div>
-        </div>
-        <div class="glass stat-card">
-          <div class="stat-val" id="stat-done">0%</div>
-          <div class="stat-lbl">Выполнено</div>
+        <div class="glass dash-card" style="text-align:center;">
+          <div class="dash-label">Прогресс дня</div>
+          <div class="dash-main" style="font-size:22px;" id="stat-done">0%</div>
+          <div class="dash-sub"><span id="stat-day">0</span> задач на день</div>
         </div>
       </div>
 
@@ -778,164 +923,275 @@
       <section class="glass notes-section">
         <div class="notes-header">
           <div class="selected-date-title" id="selected-date-label">Заметки</div>
-          <button class="add-note-btn" onclick="toggleNoteForm()">+ Заметка</button>
+          <button class="primary-btn" onclick="toggleNoteForm()">+ Заметка</button>
         </div>
 
-        <input type="text" id="search-input" class="search-box" placeholder="Поиск по всем заметкам..." oninput="renderNotes()" />
+        <div class="filter-bar">
+          <div class="filter-chip active" onclick="setFilter('all', this)">Все</div>
+          <div class="filter-chip" onclick="setFilter('todo', this)">Активные</div>
+          <div class="filter-chip" onclick="setFilter('done', this)">Выполненные</div>
+        </div>
+
+        <input type="text" id="search-input" class="search-box" placeholder="Быстрый поиск по всем дням..." oninput="renderNotes()" />
 
         <div class="note-form" id="note-form">
-          <input type="text" id="note-title" class="input-field" placeholder="Название события или заметки..." />
+          <input type="text" id="note-title" class="input-field" placeholder="Что нужно сделать?" />
           <div class="form-row">
-            <input type="time" id="note-time" class="input-field" value="14:00" style="margin-bottom:0; width: 130px;" />
-            <input type="text" id="note-desc" class="input-field" placeholder="Детали / описание..." style="margin-bottom:0;" />
+            <input type="time" id="note-time" class="input-field" value="14:00" style="margin-bottom:0; width: 120px;" />
+            <input type="text" id="note-desc" class="input-field" placeholder="Заметка / комментарий..." style="margin-bottom:0;" />
           </div>
-          <div class="tag-selector" id="tag-selector">
-            <div class="tag-chip active" data-color="#a855f7" data-name="Важное" onclick="selectTag(this)">🟣 Важное</div>
-            <div class="tag-chip" data-color="#00b4d8" data-name="Учёба / Проект" onclick="selectTag(this)">🔵 Учёба / Проект</div>
-            <div class="tag-chip" data-color="#10b981" data-name="Личное" onclick="selectTag(this)">🟢 Личное</div>
+          <div class="tag-selector">
+            <div class="tag-chip active" data-color="#ffffff" data-name="Важное" onclick="selectTag(this)">⚪ Важное</div>
+            <div class="tag-chip" data-color="#a855f7" data-name="Проект" onclick="selectTag(this)">🟣 Проект</div>
+            <div class="tag-chip" data-color="#38bdf8" data-name="Учёба" onclick="selectTag(this)">🔵 Учёба</div>
             <div class="tag-chip" data-color="#f43f5e" data-name="Дедлайн" onclick="selectTag(this)">🔴 Дедлайн</div>
           </div>
-          <button class="add-note-btn" style="width:100%; padding:11px;" onclick="saveNote()">Сохранить в календарь</button>
+          <button class="primary-btn" style="width:100%; padding:10px;" onclick="saveNote()">Сохранить событие</button>
         </div>
 
         <div class="note-list" id="note-list"></div>
       </section>
     </main>
 
-    <!-- СТРАНИЦА 2: ФОКУС-ТАЙМЕР -->
+    <!-- ВКЛАДКА 2: ФОКУС И ПРИВЫЧКИ -->
     <section id="page-focus" class="page">
-      <div class="glass timer-card">
-        <div class="sec-title" style="justify-content:center;">⚡ Режим Глубокого Фокуса</div>
-        <p style="font-size:12px; color:var(--text-muted);">Таймер продуктивности для выполнения задач из календаря</p>
-
+      <div class="glass card-block" style="text-align:center;">
+        <div class="sec-title" style="justify-content:center;">⚡ Таймер глубокого фокуса</div>
         <div class="timer-ring-wrap">
-          <svg class="timer-svg" width="200" height="200">
-            <circle cx="100" cy="100" r="86" stroke="rgba(255,255,255,0.1)" stroke-width="10" fill="none" />
-            <circle id="timer-progress" cx="100" cy="100" r="86" stroke="var(--accent)" stroke-width="10" fill="none"
-              stroke-dasharray="540" stroke-dashoffset="0" stroke-linecap="round" />
+          <svg class="timer-svg" width="180" height="180">
+            <circle cx="90" cy="90" r="76" stroke="rgba(255,255,255,0.12)" stroke-width="8" fill="none" />
+            <circle id="timer-progress" cx="90" cy="90" r="76" stroke="#ffffff" stroke-width="8" fill="none"
+              stroke-dasharray="477" stroke-dashoffset="0" stroke-linecap="round" />
           </svg>
           <div class="timer-display" id="timer-text">25:00</div>
         </div>
-
-        <div class="timer-controls">
-          <button class="add-note-btn" id="timer-btn" onclick="toggleTimer()">Старт</button>
-          <button class="today-pill" onclick="resetTimer(25)">25 мин</button>
-          <button class="today-pill" onclick="resetTimer(5)">5 мин</button>
+        <div style="display:flex; justify-content:center; gap:8px; margin-top:10px;">
+          <button class="primary-btn" id="timer-btn" onclick="toggleTimer()">Старт</button>
+          <button class="pill-btn" onclick="resetTimer(25)">25 мин</button>
+          <button class="pill-btn" onclick="resetTimer(45)">45 мин</button>
+          <button class="pill-btn" onclick="resetTimer(5)">5 мин</button>
         </div>
+      </div>
+
+      <div class="glass card-block">
+        <div class="sec-title">
+          <span>🔥 Трекер дисциплины (Пн–Вс)</span>
+        </div>
+        <div id="habits-container"></div>
       </div>
     </section>
 
-    <!-- СТРАНИЦА 3: НАСТРОЙКИ И КАСТОМИЗАЦИЯ -->
+    <!-- ВКЛАДКА 3: НАСТРОЙКИ И КАСТОМИЗАЦИЯ -->
     <section id="page-settings" class="page">
-      <div class="glass settings-card">
-        <div class="sec-title">🎨 Готовые темы Liquid Glass</div>
+      <div class="glass card-block">
+        <div class="sec-title">🌊 Пресеты волн (Монохром и Неон)</div>
         <div class="presets-grid">
-          <button class="preset-btn" onclick="applyPreset('#7b2cbf','#00b4d8','#ff007f','#a855f7')">
-            <span class="preset-dot" style="background:linear-gradient(135deg,#7b2cbf,#00b4d8)"></span> Cyber Purple
+          <button class="preset-btn" onclick="applyPreset('#060608','#ffffff','#8a8a98','#2d2d35')">
+            <span class="preset-dot" style="background:linear-gradient(135deg,#fff,#333)"></span> Obsidian Ч/Б
           </button>
-          <button class="preset-btn" onclick="applyPreset('#0077b6','#00f5d4','#48cae4','#00bbf9')">
-            <span class="preset-dot" style="background:linear-gradient(135deg,#0077b6,#00f5d4)"></span> Ocean Vision
+          <button class="preset-btn" onclick="applyPreset('#000000','#d4d4d8','#52525b','#18181b')">
+            <span class="preset-dot" style="background:linear-gradient(135deg,#d4d4d8,#18181b)"></span> Liquid Mercury
           </button>
-          <button class="preset-btn" onclick="applyPreset('#ff0055','#7000ff','#ffbe0b','#ff006e')">
-            <span class="preset-dot" style="background:linear-gradient(135deg,#ff0055,#ffbe0b)"></span> Sunset Neon
+          <button class="preset-btn" onclick="applyPreset('#111116','#f8fafc','#94a3b8','#475569')">
+            <span class="preset-dot" style="background:linear-gradient(135deg,#f8fafc,#475569)"></span> Silver Silk
           </button>
-          <button class="preset-btn" onclick="applyPreset('#059669','#10b981','#3b82f6','#10b981')">
-            <span class="preset-dot" style="background:linear-gradient(135deg,#059669,#3b82f6)"></span> Aurora Emerald
+          <button class="preset-btn" onclick="applyPreset('#080612','#a855f7','#00b4d8','#7b2cbf')">
+            <span class="preset-dot" style="background:linear-gradient(135deg,#a855f7,#00b4d8)"></span> Cyber Purple
           </button>
         </div>
 
-        <div class="sec-title">🌈 Цвета перелива фона и акцента</div>
+        <div class="sec-title">
+          <span>💾 Мои сохраненные темы</span>
+          <button class="pill-btn" style="font-size:11px; padding:4px 10px;" onclick="saveUserPreset()">+ Сохранить текущую</button>
+        </div>
+        <div class="saved-themes-list" id="saved-themes-list"></div>
+
+        <div class="sec-title">🎨 Тонкая настройка перелива волн</div>
         <div class="color-pickers">
           <div class="color-item">
-            <input type="color" id="col-blob1" value="#7b2cbf" oninput="updateCustomTheme()" />
-            <span>Сфера 1</span>
+            <input type="color" id="col-bg" value="#060608" oninput="updateCustomTheme()" />
+            <span>Фон</span>
           </div>
           <div class="color-item">
-            <input type="color" id="col-blob2" value="#00b4d8" oninput="updateCustomTheme()" />
-            <span>Сфера 2</span>
+            <input type="color" id="col-w1" value="#ffffff" oninput="updateCustomTheme()" />
+            <span>Волна 1</span>
           </div>
           <div class="color-item">
-            <input type="color" id="col-blob3" value="#ff007f" oninput="updateCustomTheme()" />
-            <span>Сфера 3</span>
+            <input type="color" id="col-w2" value="#8a8a98" oninput="updateCustomTheme()" />
+            <span>Волна 2</span>
           </div>
           <div class="color-item">
-            <input type="color" id="col-accent" value="#a855f7" oninput="updateCustomTheme()" />
-            <span>Акцент</span>
+            <input type="color" id="col-w3" value="#2d2d35" oninput="updateCustomTheme()" />
+            <span>Волна 3</span>
           </div>
         </div>
 
         <div class="ctrl-group">
-          <div class="ctrl-label">
-            <span>Прозрачность стекла</span>
-            <span id="val-alpha">14%</span>
-          </div>
-          <input type="range" id="rng-alpha" min="4" max="40" value="14" oninput="updateCustomTheme()" />
+          <div class="ctrl-label"><span>Прозрачность стекла</span><span id="val-alpha">12%</span></div>
+          <input type="range" id="rng-alpha" min="4" max="38" value="12" oninput="updateCustomTheme()" />
         </div>
 
         <div class="ctrl-group">
-          <div class="ctrl-label">
-            <span>Глубина размытия (Blur)</span>
-            <span id="val-blur">24px</span>
-          </div>
-          <input type="range" id="rng-blur" min="6" max="45" value="24" oninput="updateCustomTheme()" />
+          <div class="ctrl-label"><span>Глубина размытия (Blur)</span><span id="val-blur">22px</span></div>
+          <input type="range" id="rng-blur" min="6" max="40" value="22" oninput="updateCustomTheme()" />
         </div>
 
         <div class="ctrl-group">
-          <div class="ctrl-label">
-            <span>Яркость бликов граней</span>
-            <span id="val-border">28%</span>
-          </div>
-          <input type="range" id="rng-border" min="8" max="65" value="28" oninput="updateCustomTheme()" />
+          <div class="ctrl-label"><span>Скорость движения волн</span><span id="val-speed">1.0x</span></div>
+          <input type="range" id="rng-speed" min="2" max="30" value="10" oninput="updateCustomTheme()" />
         </div>
 
-        <div class="ctrl-group">
-          <div class="ctrl-label">
-            <span>Скорость перелива фона</span>
-            <span id="val-speed">14 сек</span>
-          </div>
-          <input type="range" id="rng-speed" min="4" max="30" value="14" oninput="updateCustomTheme()" />
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px;">
+          <button class="pill-btn" onclick="loadPresentationDemo()">🚀 Демо-заметки</button>
+          <button class="pill-btn" onclick="triggerTestUpdateBanner()">🔔 Тест плашки обновы</button>
         </div>
-
-        <button class="add-note-btn" style="width:100%; padding:12px; margin-top:6px;" onclick="loadPresentationDemo()">
-          🚀 Загрузить демо-данные для презентации
-        </button>
       </div>
 
-      <!-- ССЫЛКА НА АВТОРА -->
       <div class="glass author-card">
         <div class="brand-sub">DEVELOPED & DESIGNED BY</div>
-        <div class="author-name">slu1pik</div>
-        <p style="font-size:12px; color:var(--text-muted);">Liquid Glass Architecture & Custom UI</p>
+        <div style="font-size:18px; font-weight:900; margin:4px 0;">slu1pik</div>
+        <p style="font-size:11px; color:var(--text-muted);">Liquid Glass Calendar Architecture</p>
         <a class="tg-link" href="https://t.me/PIZDRONWORLDIK" target="_blank" rel="noopener noreferrer">
           Telegram: @PIZDRONWORLDIK
         </a>
       </div>
     </section>
+
   </div>
 
-  <!-- Нижняя панель навигации -->
+  <!-- НИЖНЯЯ НАВИГАЦИЯ -->
   <nav class="glass bottom-dock">
     <button class="dock-btn active" onclick="switchTab('calendar', this)">📅 Календарь</button>
     <button class="dock-btn" onclick="switchTab('focus', this)">⚡ Фокус</button>
-    <button class="dock-btn" onclick="switchTab('settings', this)">⚙️ Настройки</button>
+    <button class="dock-btn" onclick="switchTab('settings', this)">⚙️ Кастом</button>
   </nav>
 
   <script>
-    const MONTHS = [
-      "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
-      "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"
-    ];
+    // ДАННЫЕ СБОРКИ ДЛЯ АВТООБНОВЛЕНИЯ ЧЕРЕЗ GITHUB RELEASES
+    const GITHUB_REPO = "__GITHUB_REPO__";
+    const CURRENT_BUILD = "__APP_VERSION__";
 
+    // ЗВУКОВОЙ МИКРО-ОТКЛИК (БЕЗ ВНЕШНИХ ФАЙЛОВ)
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playGlassTap(freq = 520) {
+      try {
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.035, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.065);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.07);
+      } catch (e) {}
+    }
+
+    // 120FPS АНИМАЦИЯ ПЕРЕЛИВАЮЩИХСЯ ВОЛН НА CANVAS
+    const canvas = document.getElementById("wave-canvas");
+    const ctx = canvas.getContext("2d");
+    let waveColors = ["#ffffff", "#8a8a98", "#2d2d35"];
+    let bgColor = "#060608";
+    let waveSpeed = 1.0;
+    let phase = 0;
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    function drawLiquidWaves() {
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      phase += 0.008 * waveSpeed;
+      const w = canvas.width;
+      const h = canvas.height;
+
+      for (let i = 0; i < 3; i++) {
+        ctx.save();
+        ctx.beginPath();
+        const baseHeight = h * (0.28 + i * 0.24);
+        ctx.moveTo(0, h);
+        ctx.lineTo(0, baseHeight);
+
+        for (let x = 0; x <= w; x += 24) {
+          const y = baseHeight +
+            Math.sin(x * 0.0045 + phase * (1.2 + i * 0.3) + i * 2) * 55 +
+            Math.cos(x * 0.009 - phase * 0.8 + i) * 28;
+          ctx.lineTo(x, y);
+        }
+
+        ctx.lineTo(w, h);
+        ctx.closePath();
+
+        const grad = ctx.createLinearGradient(0, baseHeight - 80, 0, h);
+        grad.addColorStop(0, waveColors[i] + "44");
+        grad.addColorStop(0.5, waveColors[i] + "18");
+        grad.addColorStop(1, "transparent");
+
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        ctx.strokeStyle = waveColors[i] + "55";
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.restore();
+      }
+      requestAnimationFrame(drawLiquidWaves);
+    }
+    requestAnimationFrame(drawLiquidWaves);
+
+    // ПРОВЕРКА ОБНОВЛЕНИЙ В РЕПОЗИТОРИИ GITHUB
+    async function checkGitHubUpdates() {
+      const verSpan = document.getElementById("ver-display");
+      const cleanBuild = CURRENT_BUILD.startsWith("__") ? "1" : CURRENT_BUILD;
+      verSpan.textContent = `v1.${cleanBuild}`;
+
+      if (GITHUB_REPO.startsWith("__") || !GITHUB_REPO.includes("/")) return;
+
+      try {
+        const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`, { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        const latestVer = (data.tag_name || "").replace("v1.", "");
+
+        if (latestVer && latestVer !== cleanBuild) {
+          const apkAsset = (data.assets || []).find(a => a.name.endsWith(".apk"));
+          const downloadUrl = apkAsset ? apkAsset.browser_download_url : data.html_url;
+          showPersistentUpdateBanner(`v1.${latestVer}`, downloadUrl);
+        }
+      } catch (e) {}
+    }
+
+    function showPersistentUpdateBanner(versionText, url) {
+      const banner = document.getElementById("update-banner");
+      document.getElementById("upd-ver-tag").textContent = versionText;
+      document.getElementById("upd-download-link").href = url;
+      banner.classList.add("visible");
+    }
+
+    function triggerTestUpdateBanner() {
+      playGlassTap(680);
+      const repoUrl = GITHUB_REPO.includes("/") ? `https://github.com/${GITHUB_REPO}/releases/latest` : "https://github.com";
+      showPersistentUpdateBanner("v2.0 PRO", repoUrl);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    // ЛОГИКА КАЛЕНДАРЯ И ЗАМЕТОК
+    const MONTHS = ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
     let currentDate = new Date();
     let selectedDateKey = formatDateKey(new Date());
-    let selectedTag = { color: "#a855f7", name: "Важное" };
-    let notesData = JSON.parse(localStorage.getItem("lg_notes_v1") || "{}");
+    let selectedTag = { color: "#ffffff", name: "Важное" };
+    let currentFilter = "all";
+    let notesData = JSON.parse(localStorage.getItem("slu1pik_notes_v2") || "{}");
 
-    function formatDateKey(dateObj) {
-      const y = dateObj.getFullYear();
-      const m = String(dateObj.getMonth() + 1).padStart(2, "0");
-      const d = String(dateObj.getDate()).padStart(2, "0");
-      return `${y}-${m}-${d}`;
+    function formatDateKey(d) {
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     }
 
     function renderCalendar() {
@@ -943,159 +1199,171 @@
       const month = currentDate.getMonth();
       document.getElementById("month-label").textContent = `${MONTHS[month]} ${year}`;
 
-      const firstDayIndex = new Date(year, month, 1).getDay();
-      const startOffset = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
+      const firstDay = new Date(year, month, 1).getDay();
+      const offset = firstDay === 0 ? 6 : firstDay - 1;
       const daysInMonth = new Date(year, month + 1, 0).getDate();
       const grid = document.getElementById("days-grid");
       grid.innerHTML = "";
 
       const todayKey = formatDateKey(new Date());
 
-      for (let i = 0; i < startOffset; i++) {
+      for (let i = 0; i < offset; i++) {
         const empty = document.createElement("div");
         empty.className = "day-cell other-month";
         grid.appendChild(empty);
       }
 
       for (let day = 1; day <= daysInMonth; day++) {
-        const cellDate = new Date(year, month, day);
-        const key = formatDateKey(cellDate);
+        const key = formatDateKey(new Date(year, month, day));
         const cell = document.createElement("div");
         cell.className = "day-cell";
         if (key === todayKey) cell.classList.add("today");
         if (key === selectedDateKey) cell.classList.add("selected");
 
         const dayNotes = notesData[key] || [];
-        let dotsHTML = '<div class="dots-wrap">';
+        let dots = '<div class="dots-wrap">';
         dayNotes.slice(0, 3).forEach(n => {
-          dotsHTML += `<span class="dot" style="background:${n.tagColor}"></span>`;
+          const dotCol = key === selectedDateKey ? "#000000" : n.tagColor;
+          dots += `<span class="dot" style="background:${dotCol}"></span>`;
         });
-        dotsHTML += "</div>";
+        dots += "</div>";
 
-        cell.innerHTML = `<span>${day}</span>${dotsHTML}`;
+        cell.innerHTML = `<span>${day}</span>${dots}`;
         cell.onclick = () => {
+          playGlassTap(540);
           selectedDateKey = key;
           renderCalendar();
           renderNotes();
         };
         grid.appendChild(cell);
       }
-
-      updateStats();
+      updateDashboard();
     }
 
     function changeMonth(delta) {
+      playGlassTap(460);
       currentDate.setMonth(currentDate.getMonth() + delta);
       renderCalendar();
     }
 
     function jumpToToday() {
+      playGlassTap(600);
       currentDate = new Date();
       selectedDateKey = formatDateKey(currentDate);
       renderCalendar();
       renderNotes();
     }
 
+    function setFilter(filterType, el) {
+      playGlassTap(520);
+      currentFilter = filterType;
+      document.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("active"));
+      el.classList.add("active");
+      renderNotes();
+    }
+
     function toggleNoteForm() {
+      playGlassTap(580);
       document.getElementById("note-form").classList.toggle("open");
     }
 
     function selectTag(el) {
+      playGlassTap(500);
       document.querySelectorAll(".tag-chip").forEach(c => c.classList.remove("active"));
       el.classList.add("active");
       selectedTag = { color: el.dataset.color, name: el.dataset.name };
     }
 
     function saveNote() {
-      const titleInput = document.getElementById("note-title");
-      const descInput = document.getElementById("note-desc");
-      const timeInput = document.getElementById("note-time");
-      const title = titleInput.value.trim();
+      const tInput = document.getElementById("note-title");
+      const dInput = document.getElementById("note-desc");
+      const tmInput = document.getElementById("note-time");
+      const title = tInput.value.trim();
       if (!title) return;
 
+      playGlassTap(700);
       if (!notesData[selectedDateKey]) notesData[selectedDateKey] = [];
       notesData[selectedDateKey].push({
         id: Date.now(),
         title,
-        desc: descInput.value.trim(),
-        time: timeInput.value || "12:00",
+        desc: dInput.value.trim(),
+        time: tmInput.value || "12:00",
         tagColor: selectedTag.color,
         tagName: selectedTag.name,
         done: false
       });
 
-      localStorage.setItem("lg_notes_v1", JSON.stringify(notesData));
-      titleInput.value = "";
-      descInput.value = "";
+      localStorage.setItem("slu1pik_notes_v2", JSON.stringify(notesData));
+      tInput.value = "";
+      dInput.value = "";
       document.getElementById("note-form").classList.remove("open");
       renderCalendar();
       renderNotes();
     }
 
     function toggleDone(dateKey, id) {
+      playGlassTap(640);
       const list = notesData[dateKey] || [];
       const item = list.find(n => n.id === id);
       if (item) {
         item.done = !item.done;
-        localStorage.setItem("lg_notes_v1", JSON.stringify(notesData));
+        localStorage.setItem("slu1pik_notes_v2", JSON.stringify(notesData));
         renderNotes();
-        updateStats();
+        updateDashboard();
       }
     }
 
     function deleteNote(dateKey, id) {
+      playGlassTap(400);
       if (!notesData[dateKey]) return;
       notesData[dateKey] = notesData[dateKey].filter(n => n.id !== id);
-      localStorage.setItem("lg_notes_v1", JSON.stringify(notesData));
+      localStorage.setItem("slu1pik_notes_v2", JSON.stringify(notesData));
       renderCalendar();
       renderNotes();
     }
 
     function renderNotes() {
-      const query = document.getElementById("search-input").value.trim().toLowerCase();
+      const q = document.getElementById("search-input").value.trim().toLowerCase();
       const container = document.getElementById("note-list");
       container.innerHTML = "";
 
-      const parts = selectedDateKey.split("-");
-      document.getElementById("selected-date-label").textContent =
-        query ? `Результаты поиска` : `Заметки на ${parts[2]}.${parts[1]}.${parts[0]}`;
+      const [y, m, d] = selectedDateKey.split("-");
+      document.getElementById("selected-date-label").textContent = q ? "Поиск по заметкам" : `План на ${d}.${m}.${y}`;
 
-      let listToRender = [];
-      if (query) {
+      let list = [];
+      if (q) {
         Object.keys(notesData).forEach(k => {
           (notesData[k] || []).forEach(n => {
-            if (n.title.toLowerCase().includes(query) || n.desc.toLowerCase().includes(query)) {
-              listToRender.push({ ...n, dateKey: k });
+            if (n.title.toLowerCase().includes(q) || n.desc.toLowerCase().includes(q)) {
+              list.push({ ...n, dateKey: k });
             }
           });
         });
       } else {
-        listToRender = (notesData[selectedDateKey] || []).map(n => ({ ...n, dateKey: selectedDateKey }));
+        list = (notesData[selectedDateKey] || []).map(n => ({ ...n, dateKey: selectedDateKey }));
       }
 
-      listToRender.sort((a, b) => a.time.localeCompare(b.time));
+      if (currentFilter === "todo") list = list.filter(n => !n.done);
+      if (currentFilter === "done") list = list.filter(n => n.done);
+      list.sort((a, b) => a.time.localeCompare(b.time));
 
-      if (listToRender.length === 0) {
-        container.innerHTML = `<div class="empty-state">На этот день пока нет заметок ✨<br/>Нажми «+ Заметка», чтобы добавить событие</div>`;
+      if (list.length === 0) {
+        container.innerHTML = `<div class="empty-state">Список пуст ✨<br/>Нажми «+ Заметка» справа вверху</div>`;
         return;
       }
 
-      listToRender.forEach(item => {
+      list.forEach(item => {
         const div = document.createElement("div");
         div.className = `note-item ${item.done ? "done" : ""}`;
         div.innerHTML = `
           <div class="note-left">
-            <div class="check-circle" onclick="toggleDone('${item.dateKey}', ${item.id})">
-              ${item.done ? "✓" : ""}
-            </div>
+            <div class="check-circle" onclick="toggleDone('${item.dateKey}', ${item.id})">${item.done ? "✓" : ""}</div>
             <div>
               <div class="note-title">${item.title}</div>
               ${item.desc ? `<div class="note-desc">${item.desc}</div>` : ""}
               <div class="note-meta">
                 <span>🕒 ${item.time}</span>
-                <span class="badge" style="background:${item.tagColor}33; color:#fff; border:1px solid ${item.tagColor}">
-                  ${item.tagName}
-                </span>
+                <span class="badge" style="background:rgba(255,255,255,0.12); color:#fff; border:1px solid ${item.tagColor}">${item.tagName}</span>
               </div>
             </div>
           </div>
@@ -1105,122 +1373,185 @@
       });
     }
 
-    function updateStats() {
-      let total = 0;
-      let done = 0;
-      Object.values(notesData).forEach(arr => {
-        arr.forEach(n => {
-          total++;
-          if (n.done) done++;
-        });
-      });
-      const dayCount = (notesData[selectedDateKey] || []).length;
-      document.getElementById("stat-total").textContent = total;
-      document.getElementById("stat-day").textContent = dayCount;
-      document.getElementById("stat-done").textContent = total ? `${Math.round((done / total) * 100)}%` : "0%";
+    function updateDashboard() {
+      const dayList = notesData[selectedDateKey] || [];
+      const doneCount = dayList.filter(n => n.done).length;
+      document.getElementById("stat-day").textContent = dayList.length;
+      document.getElementById("stat-done").textContent = dayList.length ? `${Math.round((doneCount / dayList.length) * 100)}%` : "0%";
+
+      const pending = dayList.filter(n => !n.done).sort((a, b) => a.time.localeCompare(b.time));
+      if (pending.length > 0) {
+        document.getElementById("next-event-title").textContent = pending[0].title;
+        document.getElementById("next-event-time").textContent = `Сегодня в ${pending[0].time} • ${pending[0].tagName}`;
+      } else {
+        document.getElementById("next-event-title").textContent = "Все задачи закрыты";
+        document.getElementById("next-event-time").textContent = "Свободное время или добавь план";
+      }
     }
 
-    // НАВИГАЦИЯ МЕЖДУ ВКЛАДКАМИ
+    // ТРЕКЕР ПРИВЫЧЕК
+    const defaultHabits = [
+      { name: "Спорт / Зал", days: [true, false, true, false, true, false, false] },
+      { name: "Код и проект", days: [true, true, true, true, false, false, false] },
+      { name: "Английский / Учёба", days: [false, true, false, true, true, false, false] }
+    ];
+    let habits = JSON.parse(localStorage.getItem("slu1pik_habits") || JSON.stringify(defaultHabits));
+
+    function renderHabits() {
+      const wrap = document.getElementById("habits-container");
+      wrap.innerHTML = "";
+      const dNames = ["П","В","С","Ч","П","С","В"];
+      habits.forEach((h, hIdx) => {
+        const row = document.createElement("div");
+        row.className = "habit-row";
+        let dotsHtml = `<div class="habit-days">`;
+        h.days.forEach((active, dIdx) => {
+          dotsHtml += `<div class="h-dot ${active ? "active" : ""}" onclick="toggleHabit(${hIdx},${dIdx})">${dNames[dIdx]}</div>`;
+        });
+        dotsHtml += `</div>`;
+        row.innerHTML = `<div class="habit-name">${h.name}</div>${dotsHtml}`;
+        wrap.appendChild(row);
+      });
+    }
+
+    function toggleHabit(hIdx, dIdx) {
+      playGlassTap(620);
+      habits[hIdx].days[dIdx] = !habits[hIdx].days[dIdx];
+      localStorage.setItem("slu1pik_habits", JSON.stringify(habits));
+      renderHabits();
+    }
+
+    // ТЕМЫ И СОХРАНЕНИЕ ПОЛЬЗОВАТЕЛЬСКИХ ТЕМ
+    let userPresets = JSON.parse(localStorage.getItem("slu1pik_user_presets") || "[]");
+
+    function updateCustomTheme() {
+      bgColor = document.getElementById("col-bg").value;
+      const w1 = document.getElementById("col-w1").value;
+      const w2 = document.getElementById("col-w2").value;
+      const w3 = document.getElementById("col-w3").value;
+      waveColors = [w1, w2, w3];
+
+      const alpha = document.getElementById("rng-alpha").value;
+      const blur = document.getElementById("rng-blur").value;
+      const speedVal = document.getElementById("rng-speed").value;
+      waveSpeed = speedVal / 10;
+
+      const root = document.documentElement.style;
+      root.setProperty("--bg-base", bgColor);
+      root.setProperty("--glass-alpha", (alpha / 100).toFixed(2));
+      root.setProperty("--glass-blur", `${blur}px`);
+
+      document.getElementById("val-alpha").textContent = `${alpha}%`;
+      document.getElementById("val-blur").textContent = `${blur}px`;
+      document.getElementById("val-speed").textContent = `${waveSpeed.toFixed(1)}x`;
+
+      localStorage.setItem("slu1pik_theme_v2", JSON.stringify({ bgColor, w1, w2, w3, alpha, blur, speedVal }));
+    }
+
+    function applyPreset(bg, w1, w2, w3) {
+      playGlassTap(560);
+      document.getElementById("col-bg").value = bg;
+      document.getElementById("col-w1").value = w1;
+      document.getElementById("col-w2").value = w2;
+      document.getElementById("col-w3").value = w3;
+      updateCustomTheme();
+    }
+
+    function saveUserPreset() {
+      playGlassTap(660);
+      const preset = {
+        name: `Тема #${userPresets.length + 1}`,
+        bg: document.getElementById("col-bg").value,
+        w1: document.getElementById("col-w1").value,
+        w2: document.getElementById("col-w2").value,
+        w3: document.getElementById("col-w3").value
+      };
+      userPresets.push(preset);
+      localStorage.setItem("slu1pik_user_presets", JSON.stringify(userPresets));
+      renderUserPresets();
+    }
+
+    function renderUserPresets() {
+      const box = document.getElementById("saved-themes-list");
+      if (userPresets.length === 0) {
+        box.innerHTML = `<span style="font-size:11px; color:var(--text-muted);">Нажми «+ Сохранить текущую», чтобы добавить свой пресет</span>`;
+        return;
+      }
+      box.innerHTML = "";
+      userPresets.forEach((p, idx) => {
+        const chip = document.createElement("button");
+        chip.className = "pill-btn";
+        chip.style.fontSize = "11px";
+        chip.innerHTML = `🎨 ${p.name}`;
+        chip.onclick = () => applyPreset(p.bg, p.w1, p.w2, p.w3);
+        box.appendChild(chip);
+      });
+    }
+
+    function loadSavedTheme() {
+      const saved = JSON.parse(localStorage.getItem("slu1pik_theme_v2") || "null");
+      if (!saved) return;
+      document.getElementById("col-bg").value = saved.bgColor;
+      document.getElementById("col-w1").value = saved.w1;
+      document.getElementById("col-w2").value = saved.w2;
+      document.getElementById("col-w3").value = saved.w3;
+      document.getElementById("rng-alpha").value = saved.alpha;
+      document.getElementById("rng-blur").value = saved.blur;
+      document.getElementById("rng-speed").value = saved.speedVal;
+      updateCustomTheme();
+    }
+
     function switchTab(tabId, btn) {
+      playGlassTap(520);
       document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
       document.getElementById(`page-${tabId}`).classList.add("active");
       document.querySelectorAll(".dock-btn").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
     }
 
-    // КАСТОМИЗАЦИЯ LIQUID GLASS
-    function updateCustomTheme() {
-      const b1 = document.getElementById("col-blob1").value;
-      const b2 = document.getElementById("col-blob2").value;
-      const b3 = document.getElementById("col-blob3").value;
-      const acc = document.getElementById("col-accent").value;
-      const alpha = document.getElementById("rng-alpha").value;
-      const blur = document.getElementById("rng-blur").value;
-      const border = document.getElementById("rng-border").value;
-      const speed = document.getElementById("rng-speed").value;
-
-      const root = document.documentElement.style;
-      root.setProperty("--blob-1", b1);
-      root.setProperty("--blob-2", b2);
-      root.setProperty("--blob-3", b3);
-      root.setProperty("--accent", acc);
-      root.setProperty("--glass-alpha", (alpha / 100).toFixed(2));
-      root.setProperty("--glass-blur", `${blur}px`);
-      root.setProperty("--border-alpha", (border / 100).toFixed(2));
-      root.setProperty("--anim-speed", `${speed}s`);
-
-      document.getElementById("val-alpha").textContent = `${alpha}%`;
-      document.getElementById("val-blur").textContent = `${blur}px`;
-      document.getElementById("val-border").textContent = `${border}%`;
-      document.getElementById("val-speed").textContent = `${speed} сек`;
-
-      localStorage.setItem("lg_theme_v1", JSON.stringify({ b1, b2, b3, acc, alpha, blur, border, speed }));
-    }
-
-    function applyPreset(b1, b2, b3, acc) {
-      document.getElementById("col-blob1").value = b1;
-      document.getElementById("col-blob2").value = b2;
-      document.getElementById("col-blob3").value = b3;
-      document.getElementById("col-accent").value = acc;
-      updateCustomTheme();
-    }
-
-    function loadSavedTheme() {
-      const saved = JSON.parse(localStorage.getItem("lg_theme_v1") || "null");
-      if (!saved) return;
-      document.getElementById("col-blob1").value = saved.b1;
-      document.getElementById("col-blob2").value = saved.b2;
-      document.getElementById("col-blob3").value = saved.b3;
-      document.getElementById("col-accent").value = saved.acc;
-      document.getElementById("rng-alpha").value = saved.alpha;
-      document.getElementById("rng-blur").value = saved.blur;
-      document.getElementById("rng-border").value = saved.border;
-      document.getElementById("rng-speed").value = saved.speed;
-      updateCustomTheme();
-    }
-
     function loadPresentationDemo() {
-      const todayKey = formatDateKey(new Date());
-      notesData[todayKey] = [
-        { id: 101, title: "Презентация проекта Liquid Glass", desc: "Показать кастомизацию шейдеров, блюра и мгновенные заметки", time: "10:00", tagColor: "#a855f7", tagName: "Важное", done: true },
-        { id: 102, title: "Демонстрация сборки APK через GitHub", desc: "Объяснить облачный CI/CD пайплайн сборки Android-пакета", time: "12:30", tagColor: "#00b4d8", tagName: "Учёба / Проект", done: false },
-        { id: 103, title: "Релиз обновления от slu1pik", desc: "Опубликовать билд в Telegram-канале", time: "18:00", tagColor: "#f43f5e", tagName: "Дедлайн", done: false }
+      playGlassTap(700);
+      const tKey = formatDateKey(new Date());
+      notesData[tKey] = [
+        { id: 1, title: "Защита проекта slu1pik Calendar", desc: "Показать Ч/Б волны 120 Гц и автообновление через GitHub", time: "10:00", tagColor: "#ffffff", tagName: "Важное", done: false },
+        { id: 2, title: "Проверка OTA-плашки обновления", desc: "Демонстрация загрузки новой сборки APK в 1 клик", time: "12:00", tagColor: "#a855f7", tagName: "Проект", done: true },
+        { id: 3, title: "Релиз в Telegram @PIZDRONWORLDIK", desc: "Опубликовать финальный APK для подписчиков", time: "18:30", tagColor: "#f43f5e", tagName: "Дедлайн", done: false }
       ];
-      localStorage.setItem("lg_notes_v1", JSON.stringify(notesData));
-      selectedDateKey = todayKey;
+      localStorage.setItem("slu1pik_notes_v2", JSON.stringify(notesData));
+      selectedDateKey = tKey;
       renderCalendar();
       renderNotes();
-      switchTab('calendar', document.querySelectorAll('.dock-btn')[0]);
+      switchTab("calendar", document.querySelectorAll(".dock-btn")[0]);
     }
 
-    // ТАЙМЕР ФОКУСА
-    let timerSeconds = 25 * 60;
-    let totalTimerSeconds = 25 * 60;
-    let timerInterval = null;
+    // ТАЙМЕР
+    let timerSec = 25 * 60;
+    let totalSec = 25 * 60;
+    let tInt = null;
 
     function updateTimerUI() {
-      const m = String(Math.floor(timerSeconds / 60)).padStart(2, "0");
-      const s = String(timerSeconds % 60).padStart(2, "0");
+      const m = String(Math.floor(timerSec / 60)).padStart(2, "0");
+      const s = String(timerSec % 60).padStart(2, "0");
       document.getElementById("timer-text").textContent = `${m}:${s}`;
-      const offset = 540 - (540 * (timerSeconds / totalTimerSeconds));
-      document.getElementById("timer-progress").style.strokeDashoffset = offset;
+      document.getElementById("timer-progress").style.strokeDashoffset = 477 - (477 * (timerSec / totalSec));
     }
 
     function toggleTimer() {
+      playGlassTap(600);
       const btn = document.getElementById("timer-btn");
-      if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
+      if (tInt) {
+        clearInterval(tInt);
+        tInt = null;
         btn.textContent = "Старт";
       } else {
         btn.textContent = "Пауза";
-        timerInterval = setInterval(() => {
-          if (timerSeconds > 0) {
-            timerSeconds--;
+        tInt = setInterval(() => {
+          if (timerSec > 0) {
+            timerSec--;
             updateTimerUI();
           } else {
-            clearInterval(timerInterval);
-            timerInterval = null;
+            clearInterval(tInt);
+            tInt = null;
             btn.textContent = "Старт";
           }
         }, 1000);
@@ -1228,18 +1559,29 @@
     }
 
     function resetTimer(mins) {
-      clearInterval(timerInterval);
-      timerInterval = null;
+      playGlassTap(480);
+      clearInterval(tInt);
+      tInt = null;
       document.getElementById("timer-btn").textContent = "Старт";
-      totalTimerSeconds = mins * 60;
-      timerSeconds = totalTimerSeconds;
+      totalSec = mins * 60;
+      timerSec = totalSec;
       updateTimerUI();
     }
 
-    // ИНИЦИАЛИЗАЦИЯ
-    loadSavedTheme();
-    renderCalendar();
-    renderNotes();
+    // СТАРТ ПРИЛОЖЕНИЯ
+    window.addEventListener("DOMContentLoaded", () => {
+      loadSavedTheme();
+      renderUserPresets();
+      renderCalendar();
+      renderNotes();
+      renderHabits();
+      checkGitHubUpdates();
+      setInterval(checkGitHubUpdates, 60000);
+
+      setTimeout(() => {
+        document.getElementById("splash-screen").classList.add("hidden");
+      }, 650);
+    });
   </script>
 </body>
 </html>
