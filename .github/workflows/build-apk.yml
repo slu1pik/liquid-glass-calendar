@@ -27,75 +27,73 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Install SVG to PNG converter
-        run: sudo apt-get update && sudo apt-get install -y librsvg2-bin
-
-      - name: Inject Version & Generate slu1pik App Icon
+      - name: Prepare Web App & Inject Version
         run: |
-          mkdir -p www assets
+          mkdir -p www
           cp index.html www/index.html
-
-          # Вшиваем адрес репозитория и номер версии для автообновлений
           sed -i "s|__GITHUB_REPO__|${{ github.repository }}|g" www/index.html
           sed -i "s|__APP_VERSION__|${{ github.run_number }}|g" www/index.html
 
-          # Генерируем иконку приложения "календарь slu1pik" (1024x1024)
+      - name: Initialize Android Project
+        run: |
+          npm init -y
+          npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6
+          npx cap init "slu1pik" "com.slu1pik.liquidcalendar" --web-dir www
+          npx cap add android
+
+      - name: Generate and Inject slu1pik Icons
+        run: |
           cat << 'EOF' > icon.svg
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
-            <defs>
-              <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#141419"/>
-                <stop offset="50%" stop-color="#08080c"/>
-                <stop offset="100%" stop-color="#1f1f29"/>
-              </linearGradient>
-              <linearGradient id="glass" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.28"/>
-                <stop offset="100%" stop-color="#ffffff" stop-opacity="0.05"/>
-              </linearGradient>
-            </defs>
-            <rect width="1024" height="1024" rx="220" fill="url(#bg)"/>
-            <path d="M0 680 Q 256 580 512 680 T 1024 660 L 1024 1024 L 0 1024 Z" fill="#ffffff" fill-opacity="0.06"/>
-            <path d="M0 760 Q 300 660 600 760 T 1024 740 L 1024 1024 L 0 1024 Z" fill="#ffffff" fill-opacity="0.1"/>
-            <rect x="140" y="150" width="744" height="724" rx="130" fill="url(#glass)" stroke="#ffffff" stroke-opacity="0.45" stroke-width="8"/>
-            <rect x="290" y="100" width="44" height="110" rx="22" fill="#ffffff"/>
-            <rect x="690" y="100" width="44" height="110" rx="22" fill="#ffffff"/>
-            <line x1="140" y1="320" x2="884" y2="320" stroke="#ffffff" stroke-opacity="0.3" stroke-width="6"/>
-            <text x="512" y="265" fill="#ffffff" font-family="sans-serif" font-size="56" font-weight="800" text-anchor="middle" letter-spacing="8">CALENDAR</text>
-            <circle cx="310" cy="450" r="24" fill="#ffffff" fill-opacity="0.4"/>
-            <circle cx="512" cy="450" r="24" fill="#ffffff" fill-opacity="0.4"/>
-            <circle cx="714" cy="450" r="24" fill="#ffffff"/>
-            <circle cx="310" cy="560" r="24" fill="#ffffff" fill-opacity="0.4"/>
-            <circle cx="512" cy="560" r="24" fill="#ffffff"/>
-            <circle cx="714" cy="560" r="24" fill="#ffffff" fill-opacity="0.4"/>
-            <text x="512" y="775" fill="#ffffff" font-family="sans-serif" font-size="135" font-weight="900" text-anchor="middle">slu1pik</text>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+            <rect width="512" height="512" rx="115" fill="#08080c"/>
+            <rect x="65" y="75" width="382" height="372" rx="65" fill="#1b1b24" stroke="#ffffff" stroke-opacity="0.35" stroke-width="6"/>
+            <rect x="140" y="45" width="26" height="60" rx="13" fill="#ffffff"/>
+            <rect x="346" y="45" width="26" height="60" rx="13" fill="#ffffff"/>
+            <line x1="65" y1="165" x2="447" y2="165" stroke="#ffffff" stroke-opacity="0.25" stroke-width="4"/>
+            <text x="256" y="138" fill="#ffffff" font-family="sans-serif" font-size="28" font-weight="800" text-anchor="middle" letter-spacing="4">CALENDAR</text>
+            <circle cx="155" cy="235" r="14" fill="#ffffff" fill-opacity="0.35"/>
+            <circle cx="256" cy="235" r="14" fill="#ffffff" fill-opacity="0.35"/>
+            <circle cx="357" cy="235" r="14" fill="#ffffff"/>
+            <circle cx="155" cy="300" r="14" fill="#ffffff" fill-opacity="0.35"/>
+            <circle cx="256" cy="300" r="14" fill="#ffffff"/>
+            <circle cx="357" cy="300" r="14" fill="#ffffff"/>
+            <text x="256" y="405" fill="#ffffff" font-family="sans-serif" font-size="64" font-weight="900" text-anchor="middle">slu1pik</text>
           </svg>
           EOF
 
-          rsvg-convert -w 1024 -h 1024 icon.svg -o assets/icon.png
-          rsvg-convert -w 2732 -h 2732 icon.svg -o assets/splash.png
+          # Создаем иконки всех размеров напрямую для Android
+          RES_DIR="android/app/src/main/res"
+          convert -background none -resize 48x48 icon.svg $RES_DIR/mipmap-mdpi/ic_launcher.png
+          convert -background none -resize 72x72 icon.svg $RES_DIR/mipmap-hdpi/ic_launcher.png
+          convert -background none -resize 96x96 icon.svg $RES_DIR/mipmap-xhdpi/ic_launcher.png
+          convert -background none -resize 144x144 icon.svg $RES_DIR/mipmap-xxhdpi/ic_launcher.png
+          convert -background none -resize 192x192 icon.svg $RES_DIR/mipmap-xxxhdpi/ic_launcher.png
+          
+          # Круглые иконки
+          cp $RES_DIR/mipmap-mdpi/ic_launcher.png $RES_DIR/mipmap-mdpi/ic_launcher_round.png
+          cp $RES_DIR/mipmap-hdpi/ic_launcher.png $RES_DIR/mipmap-hdpi/ic_launcher_round.png
+          cp $RES_DIR/mipmap-xhdpi/ic_launcher.png $RES_DIR/mipmap-xhdpi/ic_launcher_round.png
+          cp $RES_DIR/mipmap-xxhdpi/ic_launcher.png $RES_DIR/mipmap-xxhdpi/ic_launcher_round.png
+          cp $RES_DIR/mipmap-xxxhdpi/ic_launcher.png $RES_DIR/mipmap-xxxhdpi/ic_launcher_round.png
 
-      - name: Build Capacitor Android Project & Apply Icons
+      - name: Build Android APK
         run: |
-          npm init -y
-          npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6 @capacitor/assets
-          npx cap init "slu1pik" "com.slu1pik.liquidcalendar" --web-dir www
-          npx cap add android
-          npx @capacitor/assets generate --android
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
           cp app/build/outputs/apk/debug/app-debug.apk ../slu1pik-calendar.apk
 
-      - name: Upload APK to Workflow Artifacts
+      - name: Upload APK to Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: slu1pik-calendar-APK
           path: slu1pik-calendar.apk
 
-      - name: Publish Auto-Update Release on GitHub
+      - name: Publish to GitHub Releases
+        continue-on-error: true
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.${{ github.run_number }}
           name: "slu1pik Calendar v1.${{ github.run_number }}"
-          body: "Автоматическое обновление Liquid Glass Calendar от slu1pik."
+          body: "Релиз приложения Liquid Glass Calendar от slu1pik с иконкой и автообновлением."
           files: slu1pik-calendar.apk
